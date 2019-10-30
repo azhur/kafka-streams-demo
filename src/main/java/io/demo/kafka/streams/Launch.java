@@ -9,8 +9,11 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.errors.DefaultProductionExceptionHandler;
 import org.apache.kafka.streams.errors.LogAndContinueExceptionHandler;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.JoinWindows;
+import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.processor.StateRestoreListener;
 
+import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
@@ -18,7 +21,9 @@ public class Launch {
     public static void main(String[] args) {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-pipe");
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1:19092,kafka2:19093,kafka3:19094");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
+        // for docker
+        //props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1:19092,kafka2:19093,kafka3:19094");
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG, LogAndContinueExceptionHandler.class);
@@ -29,10 +34,12 @@ public class Launch {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        builder
-                .stream("streams-plaintext-input", Consumed.with(Serdes.String(), Serdes.String()))
-                .filter((key, value) -> value != null)
-                .to("streams-plaintext-output");
+        KStream<String, String> stream1 = builder.stream("streams-plaintext-input", Consumed.with(Serdes.String(), Serdes.String()));
+        KStream<String, String> stream2 = builder.stream("streams-plaintext-input-2", Consumed.with(Serdes.String(), Serdes.String()));
+
+        KStream<String, String> joinedStreams = stream2.leftJoin(stream1, (value1, value2) -> value1 + value2, JoinWindows.of(Duration.ofMinutes(1)));
+
+        joinedStreams.to("streams-plaintext-output");
 
         final Topology topology = builder.build();
 

@@ -18,13 +18,14 @@ https://www.confluent.io/blog/crossing-streams-joins-apache-kafka/
 
 
 # log into kafka1 container
-docker exec -it streams-demo_kafka1_1 bash
+docker exec -it kafka-streams-demo_kafka1_1 bash
 
 # log into app container
-docker exec -it streams-demo_app_1 bash
+docker exec -it kafka-streams-demo_app_1 bash
 
 # create topic
 /usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-input
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-input-2
 /usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-output
 
 ## list of topics
@@ -41,5 +42,19 @@ http://localhost:8000
 
 # produce messages from stdin
 /usr/bin/kafka-console-producer --broker-list kafka1:19092 --topic streams-plaintext-input
+
+# produce key:value messages from stdin
+/usr/bin/kafka-console-producer \
+  --broker-list kafka1:19092 \
+  --topic streams-plaintext-input \
+  --property "parse.key=true" \
+  --property "key.separator=:"
+
+# produce key:value messages from stdin
+/usr/bin/kafka-console-producer \
+  --broker-list kafka1:19092 \
+  --topic streams-plaintext-input-2 \
+  --property "parse.key=true" \
+  --property "key.separator=:"
 
 http://javierholguera.com/2018/01/01/timeouts-in-kafka-clients-and-kafka-streams/

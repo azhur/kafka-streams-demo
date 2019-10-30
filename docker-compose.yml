@@ -91,11 +91,11 @@ services:
     depends_on:
       - kafka-rest-proxy
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8088"
-    depends_on:
-      - kafka-topics-ui
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8088"
+#    depends_on:
+#      - kafka-topics-ui
