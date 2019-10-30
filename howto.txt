@@ -1,0 +1,45 @@
+https://github.com/Landoop/kafka-cheat-sheet
+
+# how scales
+https://www.confluent.io/blog/elastic-scaling-in-kafka-streams/
+
+# use cases
+https://www.confluent.io/blog/changing-face-etl
+
+# exactly-once, transactions
+https://www.confluent.io/blog/enabling-exactly-once-kafka-streams/
+https://www.confluent.io/blog/transactions-apache-kafka/
+
+# streams and tables
+https://docs.confluent.io/current/streams/concepts.html#duality-of-streams-and-tables
+
+# joins
+https://www.confluent.io/blog/crossing-streams-joins-apache-kafka/
+
+
+# log into kafka1 container
+docker exec -it streams-demo_kafka1_1 bash
+
+# log into app container
+docker exec -it streams-demo_app_1 bash
+
+# create topic
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-input
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-output
+
+## list of topics
+/usr/bin/kafka-topics --list --zookeeper zoo1:2181
+
+# topics ui
+http://localhost:8000
+
+# list of all consumers
+/usr/bin/kafka-consumer-groups --bootstrap-server kafka1:19092 --list
+
+# describe consumer group
+/usr/bin/kafka-consumer-groups --bootstrap-server kafka1:19092  --describe --group streams-plaintext
+
+# produce messages from stdin
+/usr/bin/kafka-console-producer --broker-list kafka1:19092 --topic streams-plaintext-input
+
+http://javierholguera.com/2018/01/01/timeouts-in-kafka-clients-and-kafka-streams/
