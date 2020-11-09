@@ -24,9 +24,9 @@ docker exec -it kafka-streams-demo_kafka1_1 bash
 docker exec -it kafka-streams-demo_app_1 bash
 
 # create topic
-/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-input
-/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-input-2
-/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic streams-plaintext-output
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic Messages
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic Transactions
+/usr/bin/kafka-topics --create --zookeeper zoo1:2181 --replication-factor 3 --partitions 3 --topic MessagesAndTransactions
 
 ## list of topics
 /usr/bin/kafka-topics --list --zookeeper zoo1:2181
@@ -41,19 +41,19 @@ http://localhost:8000
 /usr/bin/kafka-consumer-groups --bootstrap-server kafka1:19092  --describe --group streams-plaintext
 
 # produce messages from stdin
-/usr/bin/kafka-console-producer --broker-list kafka1:19092 --topic streams-plaintext-input
+/usr/bin/kafka-console-producer --broker-list kafka1:19092 --topic Messages
 
 # produce key:value messages from stdin
 /usr/bin/kafka-console-producer \
   --broker-list kafka1:19092 \
-  --topic streams-plaintext-input \
+  --topic Messages \
   --property "parse.key=true" \
   --property "key.separator=:"
 
 # produce key:value messages from stdin
 /usr/bin/kafka-console-producer \
   --broker-list kafka1:19092 \
-  --topic streams-plaintext-input-2 \
+  --topic Transactions \
   --property "parse.key=true" \
   --property "key.separator=:"
 

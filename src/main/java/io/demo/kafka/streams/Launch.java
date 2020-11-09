@@ -1,6 +1,5 @@
 package io.demo.kafka.streams;
 
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -11,18 +10,16 @@ import org.apache.kafka.streams.errors.LogAndContinueExceptionHandler;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.JoinWindows;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.processor.StateRestoreListener;
 
 import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
 
 public class Launch {
     public static void main(String[] args) {
         Properties props = new Properties();
-        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-pipe");
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG, "streams-demo");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092,localhost:9093,localhost:9094");
-        // for docker
+        // within docker container
         //props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1:19092,kafka2:19093,kafka3:19094");
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());
@@ -34,55 +31,26 @@ public class Launch {
 
         final StreamsBuilder builder = new StreamsBuilder();
 
-        KStream<String, String> stream1 = builder.stream("streams-plaintext-input", Consumed.with(Serdes.String(), Serdes.String()));
-        KStream<String, String> stream2 = builder.stream("streams-plaintext-input-2", Consumed.with(Serdes.String(), Serdes.String()));
+        final KStream<String, String> messages = builder.stream("Messages", Consumed.with(Serdes.String(), Serdes.String()));
+        final KStream<String, String> transactions = builder.stream("Transactions", Consumed.with(Serdes.String(), Serdes.String()));
 
-        KStream<String, String> joinedStreams = stream2.leftJoin(stream1, (value1, value2) -> value1 + value2, JoinWindows.of(Duration.ofMinutes(1)));
-
-        joinedStreams.to("streams-plaintext-output");
+        messages
+                .leftJoin(transactions,
+                        (value1, value2) -> value1 + value2,
+                        JoinWindows.of(Duration.ofMinutes(1)))
+                .to("MessagesAndTransactions");
 
         final Topology topology = builder.build();
 
+        // https://zz85.github.io/kafka-streams-viz/
         System.out.println(topology.describe());
 
         final KafkaStreams streams = new KafkaStreams(topology, props);
-        final CountDownLatch latch = new CountDownLatch(1);
 
-        streams.setStateListener((newState, oldState) -> System.out.println("Changing state from " + oldState + " to " + newState));
-        streams.setGlobalStateRestoreListener(new StateRestoreListener() {
-            @Override
-            public void onRestoreStart(TopicPartition topicPartition, String storeName, long startingOffset, long endingOffset) {
-            }
+        System.out.println("Starting streams...");
+        streams.start();
+        System.out.println("Streams started!");
 
-            @Override
-            public void onBatchRestored(TopicPartition topicPartition, String storeName, long batchEndOffset, long numRestored) {
-            }
-
-            @Override
-            public void onRestoreEnd(TopicPartition topicPartition, String storeName, long totalRestored) {
-            }
-        });
-
-        // attach shutdown handler to catch control-c
-        Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
-            @Override
-            public void run() {
-                System.out.println("Shutting down streams...");
-                streams.close();
-                System.out.println("Streams shut down!");
-                latch.countDown();
-            }
-        });
-
-        try {
-            System.out.println("Starting streams...");
-            streams.start();
-            System.out.println("Streams started!");
-            latch.await();
-        } catch (Throwable e) {
-            System.exit(1);
-        }
-        System.out.println("Exiting...");
-        System.exit(0);
+        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
     }
 }
