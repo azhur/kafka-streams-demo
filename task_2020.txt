@@ -1,0 +1,38 @@
+Create a simple kafka streams topology which:
+ 1. consumes messages GithubEvents topic (session2 hometask)
+ 2. filters in messages with "type": "PushEvent" and send them to GithubPushEvents topic
+ 3. consumes messages from GithubPushEvents topic and counts them in 1min tumbling window. Use WallclockTimestampExtractor for windowing.
+ 4. the windowed aggregate results should be sent to the GithubEventAggregates topic .
+ 5. cover the topology with unit tests
+As the time is quite limited for our hometasks, the main purpose of this task is to try in practice
+to build a simple kafka streams app rather than build complex topologies with complex business logic.
+
+GithubEvents topic message format example:
+{
+"id": 13999415685,
+"type": "PullRequestReviewEvent",
+"actorId": 54027687,
+"actorUrl": "https://api.github.com/users/jkumar-moj",
+"repoId": 143270778,
+"repoUrl": "https://api.github.com/repos/hmcts/ia-case-api",
+"createdAt": "2020-10-28T12:48:25"
+}
+
+GithubPushEvents topic message format example:
+{
+"id": 13999415685,
+"actorId": 54027687,
+"actorUrl": "https://api.github.com/users/jkumar-moj",
+"repoId": 143270778,
+"repoUrl": "https://api.github.com/repos/hmcts/ia-case-api",
+"createdAt": "2020-10-28T12:48:25"
+}
+
+GithubEventAggregates topic message format example:
+{
+"eventType": "PushEvent",
+"startTimestamp": "2020-10-28T12:48:25", // window start
+"endTimestamp": "2020-10-28T12:49:25", // window end
+"count": 45,
+"createdAt": "2020-10-28T12:48:25"
+}
